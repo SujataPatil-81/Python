@@ -1,0 +1,40 @@
+{
+    "schema1": {
+        "dbdetails": {
+            "dbtype": "mongodb",
+            "host": "localhost",
+            "port": 27017,
+            "username": "mongo_user",
+            "password": "mongo_password",
+            "database": "PROD_ACT"
+        },
+        "querydetails": {
+            "tablename": "ALERTS",
+            "fields": ["alert_id", "alert_date", "party_id", "score","rule_id"],
+            "where": {"alert_date": "<today>"},
+            "orderby": ["alert_id", "alert_date"]
+            
+        }
+    },
+    "schema2": {
+        "dbdetails": {
+            "dbtype": "mysql",
+            "host": "localhost",
+            "port": 3306,
+            "username": "root",
+            "password": "password",
+            "database": "PROD_ACT"
+        },
+        "querydetails": {
+            "tablename": "alerts",
+            "fields": ["alert_id", "alert_date", "entity_key", "score","rule_id"],
+            "where": {"alert_date": "<today>"},
+            "orderby": ["alert_id", "alert_date"],
+            "joindetails": {
+                "join_type": "INNER",
+                "table": "orders",
+                "on": "users.id = orders.user_id"
+            }
+        }
+    }
+}
