@@ -1,6 +1,7 @@
 import json
 from pymongo import MongoClient
 from sqlalchemy import create_engine
+import urllib.parse
 
 class DatabaseConnection:
     def __init__(self, db_url):
@@ -19,12 +20,36 @@ class DatabaseConnection:
         """
         Establishes a connection to MongoDB using the provided configuration.
         """
-        return MongoClient(
-            host=config.get("host"),
-            port=config.get("port"),
-            username=config.get("username"),
-            password=config.get("password")
-        )
+        
+        """host=urllib.parse.quote_plus(config.get("host"))
+        port=urllib.parse.quote_plus(config.get("port"))"""
+        host=config.get("host")
+        port=config.get("port")
+        username = urllib.parse.quote_plus(config.get("username"))
+        password = urllib.parse.quote_plus(config.get("password"))
+        database = urllib.parse.quote_plus(config.get("database"))
+
+
+        # Construct the connection URI
+        connection_uri = f"mongodb://{username}:{password}@{host}:{port}/{database}"
+
+        # Create a MongoClient instance
+        client = MongoClient(connection_uri)
+
+        # Access the specified database
+        db = client[database]
+        db.command("ping")
+        print(f"Successfully connected to MongoDB database: {database}")
+        collection = db['ALERTS']
+        first_document = collection.find_one()
+        #print("First document:", first_document)
+
+        query = {"alert_date": "19/08/2025"}
+        alert_document = collection.find_one(query)
+        #print("Alerts of date 19th august are:", alert_document)
+        #return db
+        return client
+        
 
     @staticmethod
     def connect_to_mysql_db(config):
@@ -55,6 +80,7 @@ class DatabaseConnection:
             connection = None
             if dbtype == "mongodb":
                 connection = DatabaseConnection.connect_to_mongodb(dbdetails)
+                print(f"MongoDB connection established for connection: {connection}")
             elif dbtype == "mysql":
                 connection = DatabaseConnection.connect_to_mysql_db(dbdetails)
             elif dbtype == "postgresql":

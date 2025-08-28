@@ -40,57 +40,42 @@ def generate_sql_query(querydetails):
 
 
 
-def fetch_data(connection, dbtype, querydetails):
+
+def fetch_sql_data(connection, dbtype, querydetails):
     """
-    Fetches data from the database based on dbtype and querydetails.
+    Fetches data from SQL databases (MySQL, PostgreSQL, etc.) based on querydetails.
     """
-    if dbtype == "mysql":
-        # Build SQL query
-        tablename = querydetails.get("tablename")
-        fields = ", ".join(querydetails.get("fields", ["*"]))
-        where_conditions = querydetails.get("where", {})
-        orderby = querydetails.get("orderby", [])
-        joindetails = querydetails.get("joindetails", None)
+    tablename = querydetails.get("tablename")
+    fields = ", ".join(querydetails.get("fields", ["*"]))
+    where_conditions = querydetails.get("where", {})
+    orderby = querydetails.get("orderby", [])
+    joindetails = querydetails.get("joindetails", None)
 
-        query = f"SELECT {fields} FROM {tablename}"
-        if joindetails:
-            join_type = joindetails.get("join_type", "INNER")
-            join_table = joindetails.get("table")
-            join_on = joindetails.get("on")
-            query += f" {join_type} JOIN {join_table} ON {join_on.get('left_field')} = {join_on.get('right_field')}"
-        if where_conditions:
-            where_clauses = " AND ".join([f"{key} = '{value}'" for key, value in where_conditions.items()])
-            query += f" WHERE {where_clauses}"
-        if orderby:
-            query += f" ORDER BY {orderby[0]} {orderby[1]}"
-        result = connection.execute(query)
-        return result.fetchall()
+    query = f"SELECT {fields} FROM {tablename}"
+    if joindetails:
+        join_type = joindetails.get("join_type", "INNER")
+        join_table = joindetails.get("table")
+        join_on = joindetails.get("on")
+        query += f" {join_type} JOIN {join_table} ON {join_on.get('left_field')} = {join_on.get('right_field')}"
+    if where_conditions:
+        where_clauses = " AND ".join([f"{key} = '{value}'" for key, value in where_conditions.items()])
+        query += f" WHERE {where_clauses}"
+    if orderby:
+        query += f" ORDER BY {orderby[0]} {orderby[1]}"
+    result = connection.execute(query)
+    return result.fetchall()
 
-    elif dbtype == "mongodb":
-        tablename = querydetails.get("tablename")
-        fields = querydetails.get("fields", [])
-        where_conditions = querydetails.get("where", {})
-        database_name = querydetails.get("database")  # Add this to your config/querydetails if not present
-        db = connection[database_name] if database_name else connection.get_default_database()
-        collection = db[tablename]
-        projection = {field: 1 for field in fields} if fields else None
-        cursor = collection.find(where_conditions, projection)
-        return list(cursor)
-
-    # Add more dbtypes as needed
-    else:
-        raise ValueError(f"Unsupported dbtype: {dbtype}")
-    from .connection import DatabaseConnection
-
-    db = DatabaseConnection()
-    connection = db.connect()
-    data = []
-
-    try:
-        with connection.cursor() as cursor:
-            cursor.execute(query)
-            data = cursor.fetchall()
-    finally:
-        db.close()
-
-    return data
+def fetch_mongo_data(client, database, querydetails):
+    """
+    Fetches data from MongoDB based on querydetails.
+    """
+    db = client[database]
+    db.command("ping")
+    print(f"Successfully connected to MongoDB database: {database}")
+    collection_name = querydetails.get("collection", "ALERTS")
+    collection = db[collection_name]
+    query = querydetails.get("query", {"alert_date": "19/08/2025"})
+    first_document = collection.find_one()
+    documents = list(collection.find(query))
+    print("first_document fetched are:", first_document)
+    return documents

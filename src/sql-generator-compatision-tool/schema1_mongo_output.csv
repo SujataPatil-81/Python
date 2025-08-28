@@ -1,0 +1,2 @@
+rule_list,alert_type,alert_date,alert_id,_id,party_id,score,alert_bu,account_id,party_name,alert_source
+"['rule1', 'rule2']",1007,19/08/2025,101,68a4a4aab21fc55655083a70,3,100,orgBU,1001,Alice corp,System
